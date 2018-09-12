@@ -1,0 +1,1 @@
+from .smb_env import SuperMarioBrosEnv
