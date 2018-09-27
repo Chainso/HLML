@@ -36,7 +36,7 @@ class MultiClassClassifier(nn.Module):
 
         inp : The input to be fed into the network
         """
-        return F.softmax(self.forward(inp)).cpu().data.numpy()
+        return F.softmax(self.forward(inp), dim = -1).cpu().data.numpy()
 
     def train_batch(self, inputs, targets):
         """
