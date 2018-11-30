@@ -10,7 +10,8 @@ def forward(inp, layers, activations):
     output = inp
 
     for layer, activation in zip(layers, activations):
-        output = layer(output)
+        if(layer is not None):
+            output = layer(output)
 
         if(activation is not None):
             output = activation(output)
