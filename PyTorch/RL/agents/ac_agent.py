@@ -3,16 +3,15 @@ from numpy.random import rand, choice
 
 from .base_agent import Agent
 
-from HLML.PyTorch.utils import normalize
-from HLML.PyTorch.RL.utils import discount
+from PyTorch.utils import normalize
+from PyTorch.RL.utils import discount
 
 class ACAgent(Agent):
     """
     An agent that collects (state, action, reward, advantage) observations
     from an environment
     """
-    def __init__(self, env, replay_memory, ac_network, decay, save_path=None,
-                 logs_path=True):
+    def __init__(self, env, replay_memory, ac_network, decay, save_path=None):
         """
         Creates an agent to collect the (state, action, reward, next state)
         pairs and store them in the replay memory

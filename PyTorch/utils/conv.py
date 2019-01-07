@@ -69,7 +69,7 @@ class ResNetBlock(nn.Module):
         self.inp_map = nn.Conv2d(input_channels, out_channels, 1, 1, 0)
 
         self.up_sampling = None
-        self.down_samping = None
+        self.down_sampling = None
 
         if(upsample_scale is not None):
             self.up_sampling = nn.ConvTranspose2d(out_channels, out_channels,
@@ -100,7 +100,8 @@ class ResNetBlock(nn.Module):
         return res_result
 
 def resnet(input_channels, out_channels, batch_norm = True,
-           upsample_scale = None, downsample_scale = None):
+           upsample_scale = None, downsample_scale = None,
+           blocks_per_sample = 1):
     """
     Creates a ResNet network with the given number of input and output channels,
     strides for each ResNet block and paddings for each ResNet block
@@ -110,12 +111,20 @@ def resnet(input_channels, out_channels, batch_norm = True,
     upsample_scale : If the ResNet should upsample at the end of it
     downsample_scale : If the Resnet should downsample at the end of it
                        (only if up_sampling is None)
+    blocks_per_sample : The number of blocks before resizing if using upsampling
+                        or downsampling
     """
     tot_channels = [input_channels] + out_channels
     layers = []
 
     for i in range(len(tot_channels) - 1):
+        if(upsample_scale != None or downsample_scale != None):
+            for j in range(blocks_per_sample - 1):
+                layers.append(ResNetBlock(tot_channels[i], tot_channels[i],
+                                          batch_norm))
+
         layers.append(ResNetBlock(tot_channels[i], tot_channels[i + 1],
-                                  batch_norm, upsample_scale, downsample_scale))
+                                  batch_norm, upsample_scale,
+                                  downsample_scale))
 
     return nn.ModuleList(layers)
