@@ -103,7 +103,7 @@ class DQN(QNetwork):
                            rate)
         """
         QNetwork.__init__(self, env, device, policy, decay, optimizer,
-                          optimizer_params):
+                          optimizer_params)
 
     def step(self, state):
         """

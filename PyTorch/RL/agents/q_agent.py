@@ -1,23 +1,23 @@
 import torch
 
 from .base_agent import Agent
-from HLML.PyTorch.RL.utils import discount
+from PyTorch.RL.utils import discount
 
 class DQNAgent(Agent):
     """
-    An agent that collects (state, action, reward, next state) observations
-    from an environment
+    An agent that collects (observation, action, reward, next observation)
+    rollouts from an environment
     """
-    def __init__(self, env, replay_memory, dqn, decay, update_interval,
+    def __init__(self, env, dqn, replay_memory, decay, update_interval,
                  n_steps, save_path=None):
         """
-        Creates an agent to collect the (state, action, reward, next state)
-        pairs and store them in the replay memory
+        Creates an agent to collect the (observation, action, reward, next
+        observation) rollouts and store them in the replay memory
 
         env : The environment to collect observations from
+        dqn : The DQN model for the agent to play on
         replay_memory : The replay memory to store the observations in
         decay : The decay rate for the n step discount
-        dqn : The DQN model for the agent to play on
         update_interval : The number of steps in between target network updates
         n_steps : The number of steps for the discounted reward
         save_path : The path to save the model to during training

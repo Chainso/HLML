@@ -66,7 +66,7 @@ class Agent(ABC):
             self.step(logs_path)
 
     @abstractmethod
-    def _step(self, logs_path=None):
+    def step(self, logs_path=None):
         """
         Causes the agent to take 1 step in the environment
 
