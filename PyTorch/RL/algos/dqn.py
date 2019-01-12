@@ -50,7 +50,12 @@ class QNetwork(Model):
         self.started_training = True
 
         while(self.started_training):
-            if(replay_memory.size() >= start_size):
+            print("ASAS")
+            for param in self.online.parameters():
+                #print(param)
+                pass
+            print(len(replay_memory))
+            if(len(replay_memory) >= start_size):
                 sample = replay_memory.sample(batch_size)
                 rollouts, args = sample[0], sample[1:]
 
@@ -118,7 +123,7 @@ class DQN(QNetwork):
         Returns a tuple of (action, Q-value)
         """
         with torch.no_grad():
-            action = self.online(state)
+            action = nn.Softmax(-1)(self.online(state))
             action = Categorical(action)
             action = action.sample().item()
 
@@ -160,7 +165,6 @@ class DQN(QNetwork):
         losses = loss_func(q_vals, target_q)
         loss = (is_weights * losses).mean()
 
-        
         if(self.writer is not None):
             self.writer.add_scalar("Train/Loss", loss, self.steps_done)
 

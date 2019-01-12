@@ -93,7 +93,7 @@ class DQNAgent(Agent):
                                              next_states, errors):
                     self.replay_memory.add((s, a, r, n_s), err)
 
-            print(tot_reward)
+            #print(tot_reward)
 
             if(self.writer is not None):
                 self.writer.add_scalar("Train/Reward", tot_reward,

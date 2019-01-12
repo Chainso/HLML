@@ -1,4 +1,4 @@
-import numpy as np
+import torch
 
 from abc import ABC, abstractmethod
 from tensorboardX import SummaryWriter
@@ -34,7 +34,7 @@ class Agent(ABC):
 
         Returns the prepared state
         """
-        return self.model.FloatTensor(np.stack([state]))
+        return torch.FloatTensor([state], device = self.model.device)
 
     def _create_summary(self, logs_path, writer=None):
         """
@@ -62,13 +62,3 @@ class Agent(ABC):
         """
         for episode in range(episodes):
             self.step(logs_path)
-
-    @abstractmethod
-    def step(self, logs_path=None):
-        """
-        Causes the agent to take 1 step in the environment
-
-        logs_path : The path to save the tensorboard graphs during training
-                    and playing
-        """
-        pass

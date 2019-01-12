@@ -109,7 +109,7 @@ class BinarySumTree:
         """
         return self.tree[0]
 
-    def current_index(self):
+    def next_index(self):
         """
         Returns the leaf index of the next value added
         """
@@ -141,6 +141,12 @@ class PERMemory:
         self.experiences = np.zeros(capacity, dtype=object)
         self.priorities = BinarySumTree(capacity)
 
+    def __len__(self):
+        """
+        Returns the number of experiences added to the buffer
+        """
+        return len(self.priorities)
+
     def _get_priority(self, error):
         """
         Computes the priority for the given error
@@ -157,7 +163,7 @@ class PERMemory:
         experience : The experience to add to the buffer
         error : The TD-error of the experience
         """
-        current_index = self.priorities.current_index()
+        current_index = self.priorities.next_index()
         self.experiences[current_index] = experience
 
         priority = self._get_priority(error)

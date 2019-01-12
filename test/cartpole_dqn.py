@@ -26,8 +26,9 @@ if(__name__ == "__main__"):
     capacity = 50000
     alpha = 0.7
     beta = 0.4
+    beta_increment = 1e-3
     epsilon = 1e-3
-    per_params = (capacity, alpha, beta, epsilon)
+    per_params = (capacity, alpha, beta, beta_increment, epsilon)
     per = PERMemory(*per_params)
 
     # Q-Agent Parameters
