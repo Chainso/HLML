@@ -36,7 +36,8 @@ class QNetwork(Model):
         self.update_target()
 
         self.decay = decay
-        self.optimizer = optimizer(self.online.parameters(), *optimizer_params)
+
+        self.optimizer = optimizer(self.online.parameters(), **optimizer_params)
 
     def start_training(self, replay_memory, batch_size, start_size):
         """
@@ -50,9 +51,10 @@ class QNetwork(Model):
 
         while(self.started_training):
             if(replay_memory.size() >= start_size):
-                rollouts = replay_memory.sample(batch_size)
+                sample = replay_memory.sample(batch_size)
+                rollouts, args = sample[0], sample[1:]
 
-                self.train_batch(rollouts).item()
+                self.train_batch(rollouts, *args).item()
 
     def update_target(self):
         """
@@ -86,7 +88,7 @@ class QNetwork(Model):
 
 class DQN(QNetwork):
     def __init__(self, env, device, save_path, save_interval, policy, decay,
-                 optimizer, optimizer_params):
+                 target_update_interval, optimizer, optimizer_params):
         """
         Constructs a Q Network for the given environment
 
@@ -97,12 +99,15 @@ class DQN(QNetwork):
         save_interval : The number of steps in between model saves
         policy : The Q policy network to train
         decay : The gamma value for the Q-value decay
+        target_update_interval : The number of steps in between each target
+                                 update
         optimizer : The optimizer for the Q network to use
         optimizer_params : The parameters for the optimizer (including learning
                            rate)
         """
         QNetwork.__init__(self, env, device, save_path, save_interval, policy,
-                          decay, optimizer, optimizer_params)
+                          decay, target_update_interval, optimizer,
+                          optimizer_params)
 
     def step(self, state):
         """
@@ -179,7 +184,7 @@ class QPolicy(nn.Module):
         nn.Module.__init__(self)
 
         self.linear = nn.Sequential(
-            nn.Linear(state_space, hidden_size),
+            nn.Linear(*state_space, hidden_size),
             nn.ReLU()
             )
 
