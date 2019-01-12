@@ -8,18 +8,22 @@ class Model(ABC, nn.Module):
     """
     An abstract RL model
     """
-    def __init__(self, env, device):
+    def __init__(self, env, device, save_path, save_interval):
         """
         Creates an abstract model
 
         env : The environment to run the model in
         device : The device to run the model on, either "cpu" for cpu or
                  "cuda" for gpu
+        save_path : The path to save the model to
+        save_interval : The number of steps in between model saves
         """
         nn.Module.__init__(self)
 
         self.env = env
         self.device = torch.device(device)
+        self.save_path = save_path
+        self.save_interval = save_interval
 
         self.started_training = False
         self.steps_done = 0
@@ -52,10 +56,27 @@ class Model(ABC, nn.Module):
         """
         self.started_training = False
 
+    def routine_save(self):
+        """
+        Checks to see if the number of steps done is a multiple of the save
+        interval and will save the model if it is
+        """
+        if(self.steps_done % self.save_interval == 0):
+            self.save(self.save_path)
+
     @abstractmethod
     def start_training(self, rollouts):
         """
         Starts training the network
+        """
+        pass
+
+    @abstractmethod
+    def train_batch(self, rollouts):
+        """
+        Trains the network for a batch of rollouts
+
+        rollouts : The rollouts of training data for the network
         """
         pass
 

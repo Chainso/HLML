@@ -7,20 +7,18 @@ class Agent(ABC):
     """
     An agent that collects observations from its environment
     """
-    def __init__(self, env, model, save_path=None, logs_path=None, writer=None):
+    def __init__(self, env, model, logs_path=None, writer=None):
         """
         Creates an agent to collect the observations
 
         env : The environment to collect observations from
         model : The model for the agent to play on
-        save_path : The path to save the model to during training
         logs_path : The logs path to create the writer for if a summary writer
                     isn't given
         writer : The summary writer for the agent
         """
         self.env = env
         self.model = model
-        self.save_path = save_path
         self.logs_path = logs_path
         self.writer = writer
 
@@ -73,4 +71,4 @@ class Agent(ABC):
         logs_path : The path to save the tensorboard graphs during training
                     and playing
         """
-        
+        pass

@@ -48,7 +48,7 @@ class SynchronousEnvs():
 
         for i in range(self.n_instances):
             if(not self.finished[i]):
-
+                pass
         return self._parallel_funcs(app_funcs, app_func_args)
 
     def reset(self):
@@ -67,8 +67,7 @@ class SynchronousEnvs():
         step_acts = []
 
         for i in range(self.envs):
-            
-
+            pass
         return self._apply_to_env(steps, step_acts)
 
     def episode_finished(self):
@@ -89,23 +88,3 @@ class SynchronousEnvs():
         Returns the number of actions for the environment
         """
         return self.envs[0].action_space()
-class Env(ABC):
-    @abstractmethod
-    def reset(self):
-        pass
-
-    @abstractmethod
-    def step(self, action):
-        pass
-
-    @abstractmethod
-    def episode_finished(self):
-        pass
-
-    @abstractmethod
-    def state_space(self):
-        pass
-
-    @abstractmethod
-    def action_space(self):
-        pass

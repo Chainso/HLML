@@ -8,8 +8,7 @@ class DQNAgent(Agent):
     An agent that collects (observation, action, reward, next observation)
     rollouts from an environment
     """
-    def __init__(self, env, dqn, replay_memory, decay, update_interval,
-                 n_steps, save_path=None):
+    def __init__(self, env, dqn, replay_memory, decay, n_steps):
         """
         Creates an agent to collect the (observation, action, reward, next
         observation) rollouts and store them in the replay memory
@@ -18,15 +17,12 @@ class DQNAgent(Agent):
         dqn : The DQN model for the agent to play on
         replay_memory : The replay memory to store the observations in
         decay : The decay rate for the n step discount
-        update_interval : The number of steps in between target network updates
         n_steps : The number of steps for the discounted reward
-        save_path : The path to save the model to during training
         """
-        Agent.__init__(self, env, dqn, save_path)
+        Agent.__init__(self, env, dqn)
 
         self.replay_memory = replay_memory
         self.decay = decay
-        self.update_interval = update_interval
         self.n_steps = n_steps
 
     def train(self, episodes):
@@ -96,12 +92,6 @@ class DQNAgent(Agent):
                 for s, a, r, n_s, err in zip(states, actions, rewards,
                                              next_states, errors):
                     self.replay_memory.add((s, a, r, n_s), err)
-
-            if(episode % self.update_interval == 0):
-                self.model.update_target()
-
-            if(self.save_path is not None and (episode + 1) % 25 == 0):
-                self.model.save(self.save_path)
 
             print(tot_reward)
 

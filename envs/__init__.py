@@ -1,2 +1,2 @@
 from .base_env import Env
-from .synchronous_env import SynchronousEnv
+from .synchronous_env import SynchronousEnvs

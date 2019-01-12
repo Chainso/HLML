@@ -5,6 +5,8 @@ from torch.optim import Adam
 if(__name__ == "__main__"):
     env = GymEnv(1000, "CartPole-v1", True)
     device = "cpu"
+    save_path = "./Cartpole Models/dqn.torch"
+    save_interval = 50
     policy = QPolicy(env.state_space, env.action_space(), 16)
     decay = 0.99
     optimizer = Adam
