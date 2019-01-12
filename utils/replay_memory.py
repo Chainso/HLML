@@ -31,11 +31,12 @@ class BinarySumTree:
         index : The index of the new node
         value : The value of the new node
         """
-        change_in_value = self.tree[index] - value
+        change_in_value = value - self.tree[index]
         parent = index
 
         # Keep updating until the root node is reached
-        while((parent == (index - 1) // 2) != 0):
+        while(parent != 0):
+            parent = (parent - 1) // 2
             self.tree[parent] += change_in_value
 
     def _leaf_start_index(self):
@@ -77,8 +78,8 @@ class BinarySumTree:
         index : The index of the leaf
         """
         tree_index = self._leaf_idx_to_real(index)
-        self.tree[tree_index] = value
         self._update_parents(tree_index, value)
+        self.tree[tree_index] = value
 
     def get(self, index):
         """
@@ -99,9 +100,10 @@ class BinarySumTree:
 
     def get_leaves(self):
         """
-        Returns all the leaves in the tree
+        Returns all the added leaves in the tree
         """
-        return self.tree[self._leaf_start_index():]
+        leaf_start = self._leaf_start_index()
+        return self.tree[leaf_start:leaf_start + self.size]
 
     def sum(self):
         """
@@ -164,7 +166,7 @@ class PERMemory:
         error : The TD-error of the experience
         """
         current_index = self.priorities.next_index()
-        self.experiences[current_index] = experience
+        self.experiences[current_index] = np.array(experience)
 
         priority = self._get_priority(error)
         self.priorities.add(priority)
@@ -175,18 +177,32 @@ class PERMemory:
 
         size : The number of experiences to sample
         """
-        priorities = self.priorities.get_leaves()
-        indices = np.random.choice(len(self.priorities), size, p = priorities)
+        priorities = self.priorities.get_leaves() / self.priorities.sum()
+        indices = np.random.choice(len(priorities), size, p = priorities)
 
-        batch = self.experiences[indices]
-        probabilities = priorities[indices] / self.probabilites.sum()
+        batch = np.stack(self.experiences[indices])
+
+        stacked_batch = []
+
+        # In order to get float32 instead of float64 and long over int
+        for arr in batch.transpose():
+            stacked_arr = np.stack(arr)
+
+            if(stacked_arr.dtype == np.float64):
+                stacked_arr = stacked_arr.astype(np.float32)
+            elif(stacked_arr.dtype == np.int32):
+                stacked_arr = stacked_arr.astype(np.int64)
+
+            stacked_batch.append(stacked_arr)
+
+        probabilities = priorities[indices]
 
         is_weights = np.power(len(self.priorities) * probabilities, -self.beta)
         is_weights /= is_weights.max()
 
         self.beta = np.min([1.0, self.beta + self.beta_increment])
 
-        return batch, indices, is_weights
+        return stacked_batch, indices, is_weights
 
     def update_priority(self, index, error):
         """
@@ -198,6 +214,17 @@ class PERMemory:
         """
         priority = self._get_priority(error)
         self.priorities.set(priority, index)
+
+    def update_priorities(self, indices, errors):
+        """
+        Updates the priority of the experiences at the given indices, using the
+        errors given
+
+        index : The index of the experience
+        error : The new error of the experience
+        """
+        for index, error in zip(indices, errors):
+            self.update_priority(index, error)
 
 class Memory():
     def __init__(self, capacity, alpha, beta, epsilon=1e-5):

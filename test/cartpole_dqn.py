@@ -1,15 +1,14 @@
 if(__name__ == "__main__"):
     from torch.multiprocessing import Process
+    from torch.optim import Adam
 
     from PyTorch.RL.algos.dqn import DQN, QPolicy
     from envs.Gym import GymEnv
-    from torch.optim import Adam
     from utils.replay_memory import PERMemory
     from PyTorch.RL.agents.q_agent import DQNAgent
 
-
     # DQN Parameters
-    env = GymEnv(1000, "CartPole-v1", True)
+    env = GymEnv(1000, "CartPole-v1", False)
     device = "cpu"
     save_path = "./Cartpole Models/dqn.torch"
     save_interval = 50
@@ -32,7 +31,7 @@ if(__name__ == "__main__"):
     per = PERMemory(*per_params)
 
     # Q-Agent Parameters
-    n_steps = 8
+    n_steps = 32
     q_agent_params = (env, dqn, per, decay, n_steps)
     q_agent = DQNAgent(*q_agent_params)
 
@@ -43,7 +42,7 @@ if(__name__ == "__main__"):
 
     # Agent Training Parameters
     episodes = 1000
-    agent_training_params = (episodes,)
+    agent_training_params = (episodes, batch_size, start_size)
 
     # Training Processes
     dqn.share_memory()
@@ -51,8 +50,8 @@ if(__name__ == "__main__"):
     model_proc = Process(target=dqn.start_training, args=model_training_params)
     agent_proc = Process(target=q_agent.train, args=agent_training_params)
 
-    model_proc.start()
+   # model_proc.start()
     agent_proc.start()
 
-    model_proc.join()
+    #model_proc.join()
     agent_proc.join()

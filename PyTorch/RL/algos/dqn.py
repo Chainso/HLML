@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import numpy as np
 
 from torch.distributions import Categorical
 from copy import deepcopy
@@ -50,16 +51,11 @@ class QNetwork(Model):
         self.started_training = True
 
         while(self.started_training):
-            print("ASAS")
-            for param in self.online.parameters():
-                #print(param)
-                pass
-            print(len(replay_memory))
             if(len(replay_memory) >= start_size):
                 sample = replay_memory.sample(batch_size)
                 rollouts, args = sample[0], sample[1:]
 
-                self.train_batch(rollouts, *args).item()
+                self.train_batch(rollouts, *args)
 
     def update_target(self):
         """
@@ -146,10 +142,14 @@ class DQN(QNetwork):
                    observations) for the network
         is_weights : The importance sampling weights for the experiences
         """
+        tens_rollouts = [torch.from_numpy(arr) for arr in rollouts]
+
         # Convert to cuda if needed
-        transposed_rollouts = [tensor.cuda() if str(self.device) == "cuda"
-                               else tensor for tensor in zip(*rollouts)]
-        obs, actions, rewards, next_obs = transposed_rollouts
+        tens_rollouts = [tensor.cuda() if str(self.device) == "cuda"
+                         else tensor for tensor in tens_rollouts]
+
+        obs, actions, rewards, next_obs = tens_rollouts
+        is_weights = torch.FloatTensor(is_weights, device = self.device)
 
         q_vals = self.online(obs)
         q_vals = q_vals.gather(1, actions.unsqueeze(1)).view(-1,)
@@ -172,7 +172,10 @@ class DQN(QNetwork):
         loss.backward()
         self.optimizer.step()
 
-        return loss, losses
+        online_next_q = self.online(next_obs).gather(1, next_acts.unsqueeze(1)).view(-1,)
+        errors = torch.abs(rewards + self.decay * online_next_q - q_vals).detach().numpy()
+
+        return loss, errors
 
 class QPolicy(nn.Module):
     """
