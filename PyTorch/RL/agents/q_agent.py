@@ -64,10 +64,10 @@ class DQNAgent(Agent):
                                   self.model.online(next_state)[0, next_act] -
                                   q_value).item()
 
-                states += state.numpy().tolist()
+                states += state.cpu().numpy().tolist()
                 actions.append(action)
                 rewards.append(reward)
-                next_states += next_state.numpy().tolist()
+                next_states += next_state.cpu().numpy().tolist()
                 errors.append(error)
 
                 if(len(states) == self.n_steps):
@@ -92,8 +92,6 @@ class DQNAgent(Agent):
                     self.replay_memory.update_priorities(indices, new_errors)
 
                 state = next_state
-
-                self.model.steps_done += 1
 
             if(len(states) > 0):
                 rewards = discount(rewards, self.decay)

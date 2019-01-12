@@ -34,7 +34,7 @@ class Agent(ABC):
 
         Returns the prepared state
         """
-        return torch.FloatTensor([state], device = self.model.device)
+        return torch.FloatTensor([state]).to(self.model.device)
 
     def _create_summary(self, logs_path, writer=None):
         """

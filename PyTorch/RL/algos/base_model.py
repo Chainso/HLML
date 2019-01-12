@@ -61,7 +61,7 @@ class Model(ABC, nn.Module):
         Checks to see if the number of steps done is a multiple of the save
         interval and will save the model if it is
         """
-        if(self.steps_done % self.save_interval == 0):
+        if(self.steps_done % self.save_interval == 0 and self.training):
             self.save(self.save_path)
 
     @abstractmethod

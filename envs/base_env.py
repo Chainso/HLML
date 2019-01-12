@@ -1,6 +1,25 @@
 from abc import ABC, abstractmethod
 
 class Env(ABC):
+    """
+    An abstract environment
+    """
+    def __init__(self, render):
+        """
+        Creates the abstract environment
+
+        render : If the environment is to be rendered to the screen
+        """
+        self.render = render
+
+    def set_render(self, render):
+        """
+        Sets the environment to render the screen if true
+
+        render : If the environment is to be rendered to the screen
+        """
+        self.render = render
+
     @abstractmethod
     def reset(self):
         """

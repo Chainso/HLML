@@ -4,8 +4,8 @@ from envs import Env
 
 class GymEnv(Env):
     def __init__(self, max_steps, name, render):
+        Env.__init__(self, render)
         self.env = gym.make(name)
-        self.render = render
 
     def reset(self):
         state = self.env.reset()

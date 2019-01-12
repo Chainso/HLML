@@ -142,14 +142,10 @@ class DQN(QNetwork):
                    observations) for the network
         is_weights : The importance sampling weights for the experiences
         """
-        tens_rollouts = [torch.from_numpy(arr) for arr in rollouts]
-
-        # Convert to cuda if needed
-        tens_rollouts = [tensor.cuda() if str(self.device) == "cuda"
-                         else tensor for tensor in tens_rollouts]
-
+        tens_rollouts = [torch.from_numpy(arr).to(self.device) for arr in rollouts]
         obs, actions, rewards, next_obs = tens_rollouts
-        is_weights = torch.FloatTensor(is_weights, device = self.device)
+
+        is_weights = torch.FloatTensor(is_weights).to(self.device)
 
         q_vals = self.online(obs)
         q_vals = q_vals.gather(1, actions.unsqueeze(1)).view(-1,)
@@ -173,7 +169,7 @@ class DQN(QNetwork):
         self.optimizer.step()
 
         online_next_q = self.online(next_obs).gather(1, next_acts.unsqueeze(1)).view(-1,)
-        errors = torch.abs(rewards + self.decay * online_next_q - q_vals).detach().numpy()
+        errors = torch.abs(rewards + self.decay * online_next_q - q_vals).detach().cpu().numpy()
 
         return loss, errors
 
