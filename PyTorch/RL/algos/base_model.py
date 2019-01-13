@@ -1,10 +1,12 @@
 import torch
 import torch.nn as nn
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from tensorboardX import SummaryWriter
 
-class Model(ABC, nn.Module):
+from PyTorch.base_model import Model
+
+class RLModel(Model):
     """
     An abstract RL model
     """
@@ -18,10 +20,9 @@ class Model(ABC, nn.Module):
         save_path : The path to save the model to
         save_interval : The number of steps in between model saves
         """
-        nn.Module.__init__(self)
+        Model.Module.__init__(self, device)
 
         self.env = env
-        self.device = torch.device(device)
         self.save_path = save_path
         self.save_interval = save_interval
 
@@ -43,12 +44,6 @@ class Model(ABC, nn.Module):
             self.writer = writer
         else:
             self.writer = SummaryWriter(logs_path)
-
-    def get_device(self):
-        """
-        Returns the device the model is being run on
-        """
-        return self.device
 
     def stop_training(self):
         """
@@ -89,25 +84,7 @@ class Model(ABC, nn.Module):
         """
         pass
 
-    @abstractmethod
-    def save(self, save_path):
-        """
-        Creates a save checkpoint of the model at the save path
-
-        save_path : The path to save the checkpoint
-        """
-        pass
-
-    @abstractmethod
-    def load(self, load_path):
-        """
-        Loads the save checkpoint at the given load path
-
-        load_path : The path of the checkpoint to load
-        """
-        pass
-
-class ACNetwork(Model):
+class ACNetwork(RLModel):
     """
     A neural network using the actor-critic model
     """
@@ -122,7 +99,7 @@ class ACNetwork(Model):
         vf_coeff : The coefficient of the value loss
         max_grad_norm : The maximum value to clip the normalized gradients in
         """
-        Model.__init__(self, env, device)
+        RLModel.__init__(self, env, device)
 
         self.ent_coeff = ent_coeff
         self.vf_coeff = vf_coeff

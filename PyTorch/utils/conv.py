@@ -59,12 +59,17 @@ class ResNetBlock(nn.Module):
         """
         nn.Module.__init__(self)
 
-        self.layers = [None] * 5
-        self.layers[0] = nn.Conv2d(input_channels, out_channels, 3, 1, 1)
-        self.layers[1] = nn.BatchNorm2d(out_channels) if batch_norm else None
-        self.layers[2] = nn.ReLU()
-        self.layers[3] = nn.Conv2d(out_channels, out_channels, 3, 1, 1)
-        self.layers[4] = nn.BatchNorm2d(out_channels) if batch_norm else None
+        layers = [None] * 5
+        layers[0] = nn.Conv2d(input_channels, out_channels, 3, 1, 1)
+        layers[1] = nn.BatchNorm2d(out_channels) if batch_norm else None
+        layers[2] = nn.ReLU()
+        layers[3] = nn.Conv2d(out_channels, out_channels, 3, 1, 1)
+        layers[4] = nn.BatchNorm2d(out_channels) if batch_norm else None
+        layers = [layer for layer in layers if layer is not None]
+
+        self.layers = nn.Sequential(
+            *layers
+            )
 
         self.inp_map = nn.Conv2d(input_channels, out_channels, 1, 1, 0)
 
@@ -88,7 +93,7 @@ class ResNetBlock(nn.Module):
 
         inp : The input to run the network on
         """
-        resnet = forward(inp, self.layers, [None] * len(self.layers))
+        resnet = self.layers(inp)
         inp_map = self.inp_map(inp)
 
         res_result = resnet + inp_map

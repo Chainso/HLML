@@ -1,13 +1,12 @@
 import torch
 import torch.nn as nn
-import numpy as np
 
 from torch.distributions import Categorical
 from copy import deepcopy
 
-from .base_model import Model
+from .base_model import RLModel
 
-class QNetwork(Model):
+class QNetwork(RLModel):
     """
     A general Q Network
     """
@@ -29,7 +28,7 @@ class QNetwork(Model):
         optimizer_params : The parameters for the optimizer (including learning
                            rate)
         """
-        Model.__init__(self, env, device, save_path, save_interval)
+        RLModel.__init__(self, env, device, save_path, save_interval)
 
         self.online = policy
         self.target = deepcopy(policy)

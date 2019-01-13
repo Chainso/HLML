@@ -1,3 +1,3 @@
 from .classifier import *
-from .gan import *
+from PyTorch.SL.GAN.gan import *
 from .common_trainers import MSETrainer
