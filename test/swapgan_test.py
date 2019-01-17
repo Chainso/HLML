@@ -59,14 +59,15 @@ class Discriminator(nn.Module):
 
         for _ in range(num_hidden):
             out_filts = hidden_filt * 2
-            conv_blocks.append(self.conv_block(hidden_filt, out_filts, 4, 2, 1))
+            conv_blocks.append(self.conv_block(hidden_filt, out_filts, 5, 2, 1))
             hidden_filt = out_filts
 
         self.layers = nn.Sequential(
-            nn.Conv2d(image_channels, num_init_filters, 4, 2, 1),
+            nn.Conv2d(image_channels, num_init_filters, 5, 2, 1),
             nn.LeakyReLU(0.2, inplace = True),
             *conv_blocks,
-            nn.Conv2d(hidden_filt, 1, 4, 1, 0, bias=False),
+            nn.Conv2d(hidden_filt, 1, 3, 1, 0, bias=False),
+            nn.Sigmoid()
             )
 
     def forward(self, inp):
@@ -91,11 +92,11 @@ def test(tens, other):
 if(__name__ == "__main__"):
     from torch.optim import Adam
 
-    from PyTorch.data.image_data_processor import ImageDataProcessor
+    #from PyTorch.data.image_data_processor import ImageDataProcessor
     from PyTorch.SL.GAN.swap_gan import SwapGAN, swap
 
-    from PyTorch.SL.GAN.gan_runner import GANRunner
-
+    #from PyTorch.SL.GAN.gan_runner import GANRunner
+    """
     # Generator Parameters
     z_dim = 100
     image_channels = 3
@@ -106,7 +107,7 @@ if(__name__ == "__main__"):
 
     # Discriminator Parameters
     disc_num_init_filt = 64
-    disc_num_hidden = 3
+    disc_num_hidden = 2
     disc_params = (image_channels, disc_num_init_filt, disc_num_hidden)
     disc = Discriminator(*disc_params)
     
@@ -155,12 +156,26 @@ if(__name__ == "__main__"):
     block_size = 2
     new_tens, new_other, ones, zeros, true_targ = swap(tens, other, block_size)
 
-    loss_func = nn.BCEWithLogitsLoss()
+    loss_func = nn.BCELoss()
 
-    out1 = torch.randn(5, 2, 2)
+    out1 = torch.randn(5, 2, 2, requires_grad = True)
     out2 = torch.zeros(5, 2, 2)
+    optim = Adam([out1], lr = 1)
+
+    losses = []
+
+    for j in range(100):
+        optim.zero_grad()
     
-    loss1 = loss_func(out1, ones)
-    loss2 = loss_func(out2, zeros)
-    loss3 = loss_func(ones, ones)
-    """
+        losses = []
+        losses.append(loss_func(nn.Sigmoid()(out1), ones))
+        losses.append(loss_func(out2, zeros))
+        losses.append(loss_func(ones, ones))
+        losses.append(loss_func(ones, zeros))
+    
+        print(losses)
+        losses[0].backward()
+        optim.step()
+
+    print(nn.Sigmoid()(out1))
+    print(ones)

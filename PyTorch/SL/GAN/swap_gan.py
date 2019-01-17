@@ -51,11 +51,11 @@ class SwapGAN(GANModel):
         swap_out = swap(data, gen_data_detach, self.swap_size)
         swap_data, swap_gdd, swapped_ones, swapped_zeros, ones_target = swap_out
 
-        loss_func = nn.BCEWithLogitsLoss()
+        loss_func = nn.BCELoss()
 
-        disc_on_gen = self.disc(gen_data)
-        disc_on_gen_detach = self.disc(swap_gdd)
-        disc_on_real = self.disc(swap_data)
+        disc_on_gen = self.disc(gen_data).squeeze(1)
+        disc_on_gen_detach = self.disc(swap_gdd).squeeze(1)
+        disc_on_real = self.disc(swap_data).squeeze(1)
 
         disc_fake_loss = loss_func(disc_on_gen_detach, swapped_zeros)
         disc_real_loss = loss_func(disc_on_real, swapped_ones)
@@ -135,7 +135,7 @@ def swap(image, other, block_size):
     other_targ = torch.zeros(image.shape[0], bs, bs)
     
     img_targ[:, hb, wb] = 0
-    other_targ[:, hb, wb] = 0
+    other_targ[:, hb, wb] = 1
 
     # Get the image indices
     hi = bs * hb
