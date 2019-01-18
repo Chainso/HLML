@@ -16,6 +16,12 @@ class GAN(GANModel):
         device : The device for the model to run on
         gen : The generator for the GAN
         disc : The discriminator for the GAN
+        gen_optim : The optimizer of the generator
+        gen_optim_args : The arguments (including learning rate) of the
+                         generator's optimizer not including the parameters
+        disc_optim : The optimizer of the discriminator
+        disc_optim_args : The arguments (including learning rate) of the
+                          discriminator's optimizer not including the parameters 
         """
         GANModel.__init__(self, device, gen, disc)
 

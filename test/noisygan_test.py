@@ -105,7 +105,7 @@ if(__name__ == "__main__"):
     optim = Adam
     optim_args = {"lr" : 2e-3, "betas" : (0.5, 0.999)}
     gan_params = (device, gen, disc, optim, optim_args, optim, optim_args)
-    gan = GAN(*gan_params).to(torch.device(device))
+    gan = NoisyGAN(*gan_params).to(torch.device(device))
     gan.apply(weights_init)
     gan.train()
 

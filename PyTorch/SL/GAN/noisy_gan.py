@@ -16,6 +16,12 @@ class NoisyGAN(GANModel):
         device : The device for the model to run on
         gen : The generator for the GAN
         disc : The discriminator for the GAN
+        gen_optim : The optimizer of the generator
+        gen_optim_args : The arguments (including learning rate) of the
+                         generator's optimizer not including the parameters
+        disc_optim : The optimizer of the discriminator
+        disc_optim_args : The arguments (including learning rate) of the
+                          discriminator's optimizer not including the parameters 
         """
         GANModel.__init__(self, device, gen, disc)
 
@@ -95,18 +101,44 @@ class ControlledNoise(nn.Module):
     """
     A module to replace a random block of data with noise
     """
-    def __init__(self, lower_bound, upper_bound):
+    def __init__(self, lower_bound, upper_bound, block_size, device):
         """
-        Creates the controlled noisy module to create noise for an input image
+        Creates the controlled noisy module to create noise for an input image.
+        Will replace a block of the denoted size with noise, with the block
+        starting on an index such that (index + 1) % block_size == 0.
 
         lower_bound : The lower bound for the noise
         upper_bound : The upper bound for the noise
+        block_size : The size of the noisy block
+        device : The device for the noise
         """
         nn.Module.__init__(self)
 
-        self.lower_bound = lower_bound
-        self.upper_bound = upper_bound
+        self.lb = lower_bound
+        self.ub = upper_bound
+        self.block_size = block_size
+        self.device = torch.device(device)
 
+    def forward(self, img):
+        """
+        Will replace a block of the denoted size with noise, with the block
+        starting on an index such that (index + 1) % block_size == 0. The input
+        image must have height and width that is divisible by the block size.
 
-    def forward(self):
-        pass
+        image : The image to inject noise into
+        """
+        assert (img.shape[-1] == img.shape[-2]) & (img.shape[-1] / self.block_size
+                                                   == img.shape[-1] // self.block_size)
+
+        # img.shape[1] is the number of input channels
+        noise = ((self.ub + self.lb) * torch.rand(img.shape[1], self.block_size,
+                                                  self.block_size,
+                                                  device = self.device) + self.lb)
+
+        rand_bound = img.shape[-1] // self.block_size
+        noise_indices = self.block_size * torch.randint(rand_bound,
+                                                        (img.shape[0],),
+                                                        device = self.device)
+
+        img_indices = torch.stack(noise_indices, noise_indices, dim = 1)
+        noisy_image = img[noise_indices
