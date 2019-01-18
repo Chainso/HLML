@@ -71,7 +71,7 @@ class Discriminator(nn.Module):
             )
 
     def forward(self, inp):
-        return self.layers(inp)
+        return self.layers(inp).view(inp.shape[0], -1)
 
     def conv_block(self, filt_in, filt_out, kernel_size, stride, padding):
         return nn.Sequential(nn.Conv2d(filt_in, filt_out, kernel_size, stride,
@@ -111,7 +111,7 @@ if(__name__ == "__main__"):
 
     # Create the tensorboard summary
     logs_path = "./logs"
-    gan.create_summary(logs_path)
+    #gan.create_summary(logs_path)
 
     # Data Processor Parameters
     data_path = "./data/celebA"
@@ -130,8 +130,10 @@ if(__name__ == "__main__"):
     epochs = 100
     batch_size = 128
     save_interval = 1
+    disc_steps = 1
+    training_args = (disc_steps,)
     training_params = (model_save_path, model_test_path, epochs, batch_size,
-                       save_interval)
+                       save_interval, *training_args)
 
     # Testing parameters
     testing_params = (model_test_path,)

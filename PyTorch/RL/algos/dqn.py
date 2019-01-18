@@ -146,6 +146,8 @@ class DQN(QNetwork):
 
         is_weights = torch.FloatTensor(is_weights).to(self.device)
 
+        self.optimizer.zero_grad()
+
         q_vals = self.online(obs)
         q_vals = q_vals.gather(1, actions.unsqueeze(1)).view(-1,)
 
@@ -163,7 +165,6 @@ class DQN(QNetwork):
         if(self.writer is not None):
             self.writer.add_scalar("Train/Loss", loss, self.steps_done)
 
-        self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
 
