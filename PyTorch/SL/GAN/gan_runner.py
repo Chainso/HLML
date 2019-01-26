@@ -76,6 +76,6 @@ class GANRunner:
         if(model_test_path[-1] == "/"):
             model_test_path = model_test_path[:-1]
 
-        for image in range(1, len(gan_images) + 1):
+        for image in range(len(gan_images)):
             cv2.imwrite(model_test_path + "/gan-" + str(epoch) + "-"
-                        + str(image) + ".jpg", gan_images[image])
+                        + str(image + 1) + ".jpg", gan_images[image])

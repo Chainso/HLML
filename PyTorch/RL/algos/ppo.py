@@ -2,38 +2,61 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from copy import deepcopy
+
 from .base_model import ACNetwork
 
 class PPO(ACNetwork):
     """
     A neural network using the proximal policy optimization algorithm
     """
-    def __init__(self, env, device, ent_coeff, vf_coeff, policy, lr, optimizer,
-                 clip_range, max_grad_norm=None):
+    def __init__(self, env, device, save_path, save_interval, policy, 
+                 target_update_interval, ent_coeff, vf_coeff, clip_range, optim,
+                 optim_args, max_grad_norm=None):
         """
         Constructs an PPO network for the given environment
 
         env : The environment to run the model in
         device : The device to run the model on, either "cpu" for cpu or
                  "cuda" for gpu
+        save_path : The path to save the model to
+        save_interval : The number of steps in between each save of the model
+        policy : The actor-critic policy network to train
+        target_update_interval : The number of steps in between target network
+                                 updates
         ent_coeff : The coefficient of the entropy
         vf_coeff : The coefficient of the value loss
-        policy : The actor-critic policy network to train
-        lr : The learning rate the optimizer
-        optimizer : The optimizer for the PPO network to use
         clip_range : The range to clip the surrogate objective in
                      (1 - clip_range, 1 + clip_range)
+        optim : The optimizer for the PPO network to use
+        optim_args : The arguments for the optimizer including the learning rate
         max_grad_norm : The maximum value to clip the normalized gradients in
         """
-        ACNetwork.__init__(self, env, device, ent_coeff, vf_coeff,
-                           max_grad_norm)
+        ACNetwork.__init__(self, env, device, save_path, save_interval,
+                           ent_coeff, vf_coeff, max_grad_norm)
 
-        self.model = policy(*env.state_space(), env.action_space())
-        self.old_model = policy(*env.state_space(), env.action_space())
+        self.model = policy
+        self.old_model = deepcopy(policy)
 
+        self.target_update_interval = target_update_interval
         self.clip_range = clip_range
 
-        self.optimizer = optimizer(self.model.parameters(), lr = lr)
+        self.optimizer = optim(self.model.parameters(), **optim_args)
+
+    def step(self, state):
+        """
+        Get the model output for a single observation of gameplay
+
+        observation : A single observation from the environment
+
+        Returns a tuple of (action, state value)
+        """
+        action, value = ACNetwork.step(self, state)
+
+        if(self.steps_done % self.target_update_interval == 0):
+            self.update_target()
+
+        return action, value
 
     def update_target(self):
         """
@@ -80,10 +103,10 @@ class PPO(ACNetwork):
         advantage : The advantage of taking those actions in those states
         n_times_batch : The number of times to train the batch
         """
-        states = self.FloatTensor(states)
-        actions = self.LongTensor(actions)
-        rewards = self.FloatTensor(rewards)
-        advantages = self.FloatTensor(advantages)
+        states = torch.FloatTensor(states).to(self.device)
+        actions = torch.LongTensor(actions).to(self.device)
+        rewards = torch.FloatTensor(rewards).to(self.device)
+        advantages = torch.FloatTensor(advantages).to(self.device)
  
         old_adv_preds, old_v_preds = self.old_model(states)
         old_adv_preds = old_adv_preds.detach()

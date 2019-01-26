@@ -111,7 +111,7 @@ if(__name__ == "__main__"):
 
     # Create the tensorboard summary
     logs_path = "./logs"
-    #gan.create_summary(logs_path)
+    gan.create_summary(logs_path)
 
     # Data Processor Parameters
     data_path = "./data/celebA"

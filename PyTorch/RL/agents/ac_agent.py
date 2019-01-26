@@ -1,5 +1,4 @@
-from numpy import exp
-from numpy.random import rand, choice
+import numpy as np
 
 from .base_agent import Agent
 
@@ -11,38 +10,38 @@ class ACAgent(Agent):
     An agent that collects (state, action, reward, advantage) observations
     from an environment
     """
-    def __init__(self, env, replay_memory, ac_network, decay, save_path=None):
+    def __init__(self, env, ac_network, replay_memory, decay, n_steps):
         """
-        Creates an agent to collect the (state, action, reward, next state)
-        pairs and store them in the replay memory
+        Creates an agent to collect the (observation, action, reward, advantage)
+        rollouts and train the actor critic network on them
 
         env : The environment to collect observations from
+        ac_network : The actor critic model for the agent to play on
         replay_memory : The replay memory to store the observations in
-        ac_network : The actor-critic model for the agent to play on
         decay : The decay rate for the n step discount
-        save_path : The path to save the model to during training
+        n_steps : The number of steps for the discounted returns
         """
-        Agent.__init__(self, env, ac_network, save_path)
+        Agent.__init__(self, env, ac_network)
 
         self.replay_memory = replay_memory
         self.decay = decay
+        self.n_steps = n_steps
 
-        self.epsilon_start = 0.9
-        self.epsilon_end = 0.1
-        self.epsilon_decay = 200
-
-    def train(self, episodes, logs_path=None):
+    def train(self, episodes, batch_size, start_size, *training_args):
         """
         Starts the agent in the environment
 
         episodes : The number of episodes to train for
-        logs_path : The path to save the tensorboard graphs during training
-                    and playing
+        batch_size : The size of each training batch
+        start_size : The number of experiences to accumulate before starting
+                     training
+        training_args : Any additional training arguments for the actor critic
+                        network
         """
-        if(logs_path is not None):
-            self.create_summary(logs_path)
+        if(self.writer is not None):
+            self.model.create_summary("Agent", self.writer)
 
-        for episode in range(episodes):
+        for episode in range(1, episodes + 1):
             done = False
             total_reward = 0
 
@@ -53,48 +52,46 @@ class ACAgent(Agent):
             actions = []
             rewards = []
             values = []
+            dones = []
             errors = []
 
             while(not done):
-                epsilon = (self.epsilon_end + (self.epsilon_start -
-                                               self.epsilon_end) *
-                           exp(-1. * self.model.steps_done / self.epsilon_decay))
+                step = 0
 
-                action, value = self.model.step(state)
+                while(not done and step < self.n_steps):
+                    action, value = self.model.step(state)
+    
+                    next_state, reward, done = self.env.step(action)
+    
+                    next_state = self._process_state(next_state)
+                    total_reward += reward
+    
+                    #error = torch.abs(value - reward)
+                    error = 0
 
-                if(rand() < epsilon):
-                    action = choice(self.env.action_space())
+                    states += state.cpu().numpy().tolist()
+                    actions.append(action)
+                    rewards.append(reward)
+                    values.append(value)
+                    dones.append(done)
+                    errors.append(error)
+    
+                    state = next_state
 
-                next_state, reward, done = self.env.step(action)
+                _, last_val = self.model.step(next_state)
+                values += [last_val]
 
-                next_state = self._process_state(next_state)
-                total_reward += reward
-
-                error = 0.5 * (value - reward) ** 2
-
-                states += state.cpu().numpy().tolist()
-                actions.append(action)
-                rewards.append(reward)
-                values.append(value)
-                errors.append(error)
-
-                state = next_state
-                self.model.steps_done += 1
-
-            if(len(states) > 0):
-                returns = discount(rewards, self.decay)
-                advantages = returns - values
+                advantages = (rewards + self.decay * (1 - np.array(dones))
+                              * values[1:])
+                advantages = discount(advantages, self.decay) - values[:-1]
                 advantages = normalize(advantages, 1e-8)
 
-                for s, a, r, adv, err in zip(states, actions, returns,
-                                             advantages, errors):
-                    self.replay_memory.add((s, a, r, adv), err)
+                rewards = discount(rewards, self.decay)
 
-            if(self.save_path is not None and (episode + 1) % 25 == 0):
-                self.model.save(self.save_path)
-                self.model.update_target()
+                self.model.train_batch(states, actions, rewards,
+                                            advantages, *training_args)
 
-            print(total_reward)
+            print("Episode", str(episode) + ":", total_reward)
 
             if(self.writer is not None):
                 self.writer.add_scalar("Train/Reward", total_reward,

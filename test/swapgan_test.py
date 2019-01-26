@@ -59,19 +59,19 @@ class Discriminator(nn.Module):
 
         for _ in range(num_hidden):
             out_filts = hidden_filt * 2
-            conv_blocks.append(self.conv_block(hidden_filt, out_filts, 5, 2, 1))
+            conv_blocks.append(self.conv_block(hidden_filt, out_filts, 3, 2, 0))
             hidden_filt = out_filts
 
         self.layers = nn.Sequential(
-            nn.Conv2d(image_channels, num_init_filters, 5, 2, 1),
+            nn.Conv2d(image_channels, num_init_filters, 3, 2, 0),
             nn.LeakyReLU(0.2, inplace = True),
             *conv_blocks,
-            nn.Conv2d(hidden_filt, 1, 3, 1, 0, bias=False),
+            nn.Conv2d(hidden_filt, 64, 3, 1, 0, bias=False),
             nn.Sigmoid()
             )
 
     def forward(self, inp):
-        return self.layers(inp)
+        return self.layers(inp).view(-1, 1, 8, 8)
 
     def conv_block(self, filt_in, filt_out, kernel_size, stride, padding):
         return nn.Sequential(nn.Conv2d(filt_in, filt_out, kernel_size, stride,
@@ -92,11 +92,12 @@ def test(tens, other):
 if(__name__ == "__main__"):
     from torch.optim import Adam
 
-    #from PyTorch.data.image_data_processor import ImageDataProcessor
+    from PyTorch.data.image_data_processor import ImageDataProcessor
     from PyTorch.SL.GAN.swap_gan import SwapGAN, swap
+    from PyTorch.SL.GAN.gan_runner import GANRunner
 
-    #from PyTorch.SL.GAN.gan_runner import GANRunner
-    """
+    model_save_path = "./SwapGAN Models/swapgan_celebA.torch"
+
     # Generator Parameters
     z_dim = 100
     image_channels = 3
@@ -107,7 +108,7 @@ if(__name__ == "__main__"):
 
     # Discriminator Parameters
     disc_num_init_filt = 64
-    disc_num_hidden = 2
+    disc_num_hidden = 3
     disc_params = (image_channels, disc_num_init_filt, disc_num_hidden)
     disc = Discriminator(*disc_params)
     
@@ -119,8 +120,10 @@ if(__name__ == "__main__"):
     gan_params = (device, gen, disc, swap_size, optim, optim_args, optim,
                   optim_args)
     gan = SwapGAN(*gan_params).to(torch.device(device))
-    gan.apply(weights_init)
-    gan.train()
+    #gan.apply(weights_init)
+    #gan.train()
+    gan.load(model_save_path)
+    gan.eval()
 
     # Create the tensorboard summary
     logs_path = "./logs"
@@ -133,23 +136,26 @@ if(__name__ == "__main__"):
     data_proc = ImageDataProcessor(*data_proc_params)
 
     # GANRunner Parameters
-    static_noise = torch.randn(10, z_dim, device = torch.device(device))
+    static_noise = torch.randn(64, z_dim, device = torch.device(device))
     gan_runner_params = (gan, data_proc, static_noise, device)
     gan_runner = GANRunner(*gan_runner_params)
 
     # Training Parameters
-    model_save_path = "./DCGAN Models/dcgan_celebA.torch"
-    model_test_path = "./DCGAN Tests/celebA Tests"
+    model_test_path = "./SwapGAN Tests/celebA Tests"
     epochs = 100
     batch_size = 128
     save_interval = 1
+    disc_steps = 1
+    training_args = (disc_steps,)
     training_params = (model_save_path, model_test_path, epochs, batch_size,
-                       save_interval)
+                       save_interval, *training_args)
 
     # Testing parameters
     testing_params = (model_test_path,)
 
-    gan_runner.train(*training_params)
+    #gan_runner.train(*training_params)
+
+    gan_runner.test(*testing_params)
     """
     tens = torch.ones(5, 3, 4, 4)
     other = torch.zeros(5, 3, 4, 4)
@@ -179,3 +185,4 @@ if(__name__ == "__main__"):
 
     print(nn.Sigmoid()(out1))
     print(ones)
+    """

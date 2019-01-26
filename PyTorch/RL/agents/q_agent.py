@@ -35,7 +35,7 @@ class DQNAgent(Agent):
                      training
         """
         if(self.writer is not None):
-            self.model.create_summary("", self.writer)
+            self.model.create_summary("Agent", self.writer)
 
         for episode in range(1, episodes + 1):
             done = False

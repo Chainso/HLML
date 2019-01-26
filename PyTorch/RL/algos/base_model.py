@@ -3,6 +3,7 @@ import torch.nn as nn
 
 from abc import abstractmethod
 from tensorboardX import SummaryWriter
+from torch.distributions import Categorical
 
 from PyTorch.base_model import Model
 
@@ -20,7 +21,7 @@ class RLModel(Model):
         save_path : The path to save the model to
         save_interval : The number of steps in between model saves
         """
-        Model.Module.__init__(self, device)
+        Model.__init__(self, device)
 
         self.env = env
         self.save_path = save_path
@@ -88,24 +89,27 @@ class ACNetwork(RLModel):
     """
     A neural network using the actor-critic model
     """
-    def __init__(self, env, device, ent_coeff, vf_coeff, max_grad_norm=None):
+    def __init__(self, env, device, save_path, save_interval, ent_coeff,
+                 vf_coeff, max_grad_norm=None):
         """
         Constructs an actor-critic network for the given environment
 
         env : The environment to run the model in
         device : The device to run the model on, either "cpu" for cpu or
                  "cuda" for gpu
+        save_path : The path to save the model to
+        save_interval : The number of steps in between each save of the model
         ent_coeff : The coefficient of the entropy
         vf_coeff : The coefficient of the value loss
         max_grad_norm : The maximum value to clip the normalized gradients in
         """
-        RLModel.__init__(self, env, device)
+        RLModel.__init__(self, env, device, save_path, save_interval)
 
         self.ent_coeff = ent_coeff
         self.vf_coeff = vf_coeff
         self.max_grad_norm = max_grad_norm
 
-    def step(self, obs, greedy=True):
+    def step(self, obs, greedy=False):
         """
         Get the model output for a single observation of gameplay
 
@@ -116,12 +120,14 @@ class ACNetwork(RLModel):
 
         Returns an action
         """
-        adv, value = self.model(obs)
-        adv = torch.exp(adv)
+        with torch.no_grad():
+            adv, value = self.model(obs)
+            adv = nn.Softmax(-1)(adv)
+            adv = Categorical(adv)
+    
+            action = adv.sample()
 
-        if(greedy):
-            adv = adv.argmax(1)
-        else:
-            adv = adv.multinomial(1)
-
-        return adv.item(), value.item()
+            self.steps_done += 1
+            self.routine_save()
+    
+            return action.item(), value.item()
