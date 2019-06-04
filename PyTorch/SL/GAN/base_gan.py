@@ -17,12 +17,3 @@ class GANModel(Model, ABC):
 
         self.gen = gen
         self.disc = disc
-
-    @abstractmethod
-    def train_batch(self, data):
-        """
-        Trains the model for the given batch of data
-
-        data : The data to train the model on
-        """
-        pass

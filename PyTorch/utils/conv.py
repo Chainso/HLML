@@ -133,3 +133,13 @@ def resnet(input_channels, out_channels, batch_norm = True,
                                   downsample_scale))
 
     return nn.ModuleList(layers)
+
+class Conv1x1(nn.Module):
+    def __init__(self, inp_channels, out_channels, padding=0, **kwargs):
+        nn.Module.__init__(self, **kwargs)
+
+        self.conv = nn.Conv2d(inp_channels, out_channels, 1, 1, padding,
+                              **kwargs)
+
+    def forward(self, inp):
+        return self.conv(inp)

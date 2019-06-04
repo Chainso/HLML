@@ -16,6 +16,15 @@ class Model(ABC, nn.Module):
         self._device = torch.device(device)
         self.num_batches = 0
 
+    @abstractmethod
+    def train_batch(self, data):
+        """
+        Trains the model for the given batch of data
+
+        data : The data to train the model on
+        """
+        pass
+
     @property
     def device(self):
         """
