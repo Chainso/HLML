@@ -18,7 +18,7 @@ class PopulationBasedTrainer(Trainer):
         perturb_weight : The range a hyperparameter can move
                          (perturb_weight * abs(hypermeter) 
         """
-        Trainer.__init__(self, None, trainer.device)
+        Trainer.__init__(self, trainer.model, trainer.device)
 
         assert population_size > 0
         assert cutoff > 0
@@ -90,7 +90,11 @@ class PopulationBasedTrainer(Trainer):
                 if(perturb):
                     perturb_amt = torch.rand(1).item() * 2 - 1
                     perturb_amt = perturb_amt * self.perturb_weight
+
+                    # Add a small epsilon as well to get past 0
                     module.weights.data *= (1 + perturb_amt)
+                    module.weights.data += 1e-8
+                
                 
     def train_batch(self, *args):
         """
@@ -157,5 +161,9 @@ class PopulationBasedTrainer(Trainer):
             proc.join()
 
         scores = [trainer.score for trainer in self.trainers]
-        self._score = np.max(scores)
+        best_trainer = np.argmax(scores)
+
+        self._score = scores[best_trainer]
+        self._model = self.trainers[best_trainer].model
+
         return scores

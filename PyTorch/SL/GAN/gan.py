@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 from .base_gan import GANModel
 
 class GAN(GANModel):

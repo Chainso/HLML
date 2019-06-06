@@ -9,9 +9,16 @@ class Trainer(ABC):
         device : The device to train on
         """
         self._device = torch.device(device)
-        self.model = model.to(self.device)
+        self._model = model.to(self.device)
 
         self._score = 0
+
+    @property
+    def model(self):
+        """
+        The model the trainer is training
+        """
+        return self._model
 
     @property
     def device(self):
@@ -56,3 +63,19 @@ class Trainer(ABC):
         Evaluates the model on the data
         """
         pass
+
+    def save(self, save_path):
+        """
+        Creates a save checkpoint of the model at the save path
+
+        save_path : The path to save the checkpoint
+        """
+        torch.save(self.model.state_dict(), save_path)
+
+    def load(self, load_path):
+        """
+        Loads the save checkpoint at the given load path
+
+        load_path : The path of the checkpoint to load
+        """
+        self.model.load_state_dict(torch.load(load_path))
