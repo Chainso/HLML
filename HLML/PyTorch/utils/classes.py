@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 class Hyperparameter(nn.Parameter):
@@ -7,13 +8,14 @@ class Hyperparameter(nn.Parameter):
         initializer : The initializer to use for initialization and
                       reinitialization
         """
-        nn.Parameter.__new__(cls, [data], False)
+        return nn.Parameter.__new__(cls, torch.FloatTensor([data]), False)
 
+    def __init__(self, param, name, search=True, initializer=None):
+        nn.Parameter.__init__(self)
+
+        self.param_name = name
         self.search = search
         self.initializer = initializer
-
-    def __init__(self):
-        nn.Parameter.__init__(self)
 
         self.initialize()
 
@@ -22,7 +24,7 @@ class Hyperparameter(nn.Parameter):
         result.search = self.search
 
     def __repr__(self):
-        return "Hyper" + super(nn.Parameter, self).__repr__()
+        return "Hyperparameter " + self.param_name + ": " + str(self.item())
 
     def initialize(self):
         if(self.initializer is not None):

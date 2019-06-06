@@ -26,7 +26,7 @@ class SLTrainer(Trainer):
 
         prediction = self.model(data)
 
-        loss = loss_function(data, targets)
+        loss = self.loss_function(data, targets)
         loss.backward()
         self.optimizer.step()
 
@@ -57,10 +57,12 @@ class SLTrainer(Trainer):
             avg_loss = 0
             num_batches = 0
 
-            for data, targets in data_loader:
+            for idx, data in data_loader:
+                data, targets = [tens.unsqueeze(0) for tens in data]
+
                 loss = self.train_batch(data, targets)
 
-                avg_loss
+                avg_loss += loss
                 num_batches += 1
                 total_batches += 1
 

@@ -12,14 +12,14 @@ class Model(nn.Module):
             nn.Linear(num_hidden, num_hidden),
             nn.LeakyReLU(0.2),
             nn.Linear(num_hidden, num_outputs),
-            nn.Sigmoid(-1)
+            nn.Sigmoid()
         )
 
     def forward(self, inp):
         return self.layers(inp)
 
 class Loader():
-    def __init__(self, batch_size):
+    def __init__(self, batch_size, device):
         self.batch_size = batch_size
 
         self.data = torch.FloatTensor([[0, 0, 0, 0],
@@ -28,7 +28,7 @@ class Loader():
                                   [0, 0, 1, 1],
                                   [0, 1, 0, 0],
                                   [0, 1, 0, 1],
-                                  [0, 1, 1, 0]
+                                  [0, 1, 1, 0],
                                   [0, 1, 1, 1],
                                   [1, 0, 0, 0],
                                   [1, 0, 0, 1],
@@ -37,7 +37,7 @@ class Loader():
                                   [1, 1, 0, 0],
                                   [1, 1, 0, 1],
                                   [1, 1, 1, 0],
-                                  [1, 1, 1, 1]])
+                                  [1, 1, 1, 1]]).to(torch.device(device))
 
         self.targets = torch.LongTensor([[0],
                                     [1],
@@ -54,7 +54,7 @@ class Loader():
                                     [0],
                                     [1],
                                     [1],
-                                    [0]])
+                                    [0]]).to(torch.device(device))
 
     def __iter__(self):
         zip_data = zip(self.data, self.targets)
@@ -72,10 +72,10 @@ if(__name__ == "__main__"):
     device = "cuda"
 
     optimizer = torch.optim.SGD
-    optim_params = {"lr" : Hyperparameter(1e-2),
-                    "momentum" : Hyperparameter(0),
-                    "dampening": Hyperparameter(0),
-                    "weight_decay" : Hyperparameter(0)}
+    optim_params = {"lr" : Hyperparameter(1e-2, "lr"),
+                    "momentum" : Hyperparameter(0, "momentum"),
+                    "dampening": Hyperparameter(0, "dampening"),
+                    "weight_decay" : Hyperparameter(0, "weight decay")}
 
     loss_function = nn.BCELoss()
     mse_loss = nn.MSELoss()
@@ -85,11 +85,11 @@ if(__name__ == "__main__"):
                         score_metric)
 
     epochs = 100
-    data_loader = Loader()
-    test_loader = Loader()
-    save_path = "models/test.torch"
+    data_loader = Loader(4, device)
+    test_loader = Loader(4, device)
+    save_path = "./models/test.torch"
     save_interval = 10
-    logs_path = "logs"
+    logs_path = "./logs"
 
     trainer.train(epochs, data_loader, test_loader, save_path, save_interval,
                   logs_path)
