@@ -61,8 +61,8 @@ class Loader():
         return enumerate(zip_data)
 
 if(__name__ == "__main__"):
-    from PyTorch.SL.sl_trainer import SLTrainer
-    from PyTorch.utils.classes import Hyperparameter
+    from HLML.PyTorch.SL.sl_trainer import SLTrainer
+    from HLML.PyTorch.utils.classes import Hyperparameter
 
     num_inputs = 4
     num_hidden = 16

@@ -1,7 +1,7 @@
 import torch
 
 from .base_agent import Agent
-from PyTorch.RL.utils import discount, normalize
+from HLML.PyTorch.RL.utils import discount, normalize
 
 class DQNAgent(Agent):
     """

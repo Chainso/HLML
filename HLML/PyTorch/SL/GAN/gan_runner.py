@@ -1,7 +1,7 @@
 import torch
 import cv2
 
-from PyTorch.Trainers.trainer import Trainer
+from HLML.PyTorch.Trainers.trainer import Trainer
 
 class GANRunner(Trainer):
     """

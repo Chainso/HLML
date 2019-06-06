@@ -1,6 +1,6 @@
 from torch.utils.tensorboard import SummaryWriter
 
-from PyTorch.Trainers.trainer import Trainer
+from HLML.PyTorch.Trainers.trainer import Trainer
 
 class SLTrainer(Trainer):
     def __init__(self, model, device, optimizer, optim_args, loss_function,

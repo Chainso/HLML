@@ -34,10 +34,10 @@ if(__name__ == "__main__"):
 
     from torch.optim import Adam
 
-    from PyTorch.RL.algos.ppo import PPO
+    from HLML.PyTorch.RL.algos.ppo import PPO
     from envs.Gym import GymEnv
     from utils.replay_memory import PERMemory
-    from PyTorch.RL.agents.ac_agent import ACAgent
+    from HLML.PyTorch.RL.agents.ac_agent import ACAgent
 
     # PPO Parameters
     env = GymEnv(1000, "CartPole-v1", False)

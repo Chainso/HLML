@@ -5,7 +5,7 @@ from abc import abstractmethod
 from tensorboardX import SummaryWriter
 from torch.distributions import Categorical
 
-from PyTorch.base_model import Model
+from HLML.PyTorch.base_model import Model
 
 class RLModel(Model):
     """

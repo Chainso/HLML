@@ -1,4 +1,4 @@
-from PyTorch.base_model import Model
+from HLML.PyTorch.base_model import Model
 from abc import ABC, abstractmethod
 
 class GANModel(Model, ABC):

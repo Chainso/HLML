@@ -92,9 +92,9 @@ def test(tens, other):
 if(__name__ == "__main__"):
     from torch.optim import Adam
 
-    from PyTorch.data.image_data_processor import ImageDataProcessor
-    from PyTorch.SL.GAN.swap_gan import SwapGAN, swap
-    from PyTorch.SL.GAN.gan_runner import GANRunner
+    from HLML.PyTorch.data.image_data_processor import ImageDataProcessor
+    from HLML.PyTorch.SL.GAN.swap_gan import SwapGAN, swap
+    from HLML.PyTorch.SL.GAN.gan_runner import GANRunner
 
     model_save_path = "./SwapGAN Models/swapgan_celebA.torch"
 

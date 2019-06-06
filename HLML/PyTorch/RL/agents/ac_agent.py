@@ -2,8 +2,8 @@ import numpy as np
 
 from .base_agent import Agent
 
-from PyTorch.utils import normalize
-from PyTorch.RL.utils import discount
+from HLML.PyTorch.utils import normalize
+from HLML.PyTorch.RL.utils import discount
 
 class ACAgent(Agent):
     """

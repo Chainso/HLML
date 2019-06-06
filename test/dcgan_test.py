@@ -82,9 +82,9 @@ class Discriminator(nn.Module):
 if(__name__ == "__main__"):
     from torch.optim import Adam
 
-    from PyTorch.data.image_data_processor import ImageDataProcessor
-    from PyTorch.SL.GAN.gan import GAN
-    from PyTorch.SL.GAN.gan_runner import GANRunner
+    from HLML.PyTorch.data.image_data_processor import ImageDataProcessor
+    from HLML.PyTorch.SL.GAN.gan import GAN
+    from HLML.PyTorch.SL.GAN.gan_runner import GANRunner
 
     # Generator Parameters
     z_dim = 100
