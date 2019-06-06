@@ -35,15 +35,17 @@ class Trainer(ABC):
         pass
 
     @abstractmethod
-    def train(self, epochs, save_path=None, save_interval=1, *args):
+    def train(self, epochs, save_path=None, save_interval=1, logs_path=None,
+              *args):
         """
-        Trains the model for the given number of epochs
+        Trains the model for the number of epochs given
 
         epochs : The number of epochs to train for
         save_path : The path to save the model to, None if you do not wish to
                     save
         save_interval : If a save path is given, the number of epochs in between
                         each save
+        logs_path : The path to save logs to
         args : Any additional arguments that may be required
         """
         pass

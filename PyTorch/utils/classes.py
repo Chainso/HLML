@@ -7,7 +7,7 @@ class Hyperparameter(nn.Parameter):
         initializer : The initializer to use for initialization and
                       reinitialization
         """
-        nn.Parameter.__new__(cls, data, False)
+        nn.Parameter.__new__(cls, [data], False)
 
         self.search = search
         self.initializer = initializer
