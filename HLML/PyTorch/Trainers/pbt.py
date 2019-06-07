@@ -4,9 +4,9 @@ import numpy as np
 
 from copy import deepcopy
 
-from .trainer import Trainer
+from .parallel_trainer import Trainer
 
-class PopulationBasedTrainer(Trainer):
+class PopulationBasedTrainer(ParallelTrainer):
     def __init__(self, trainer, population_size, cutoff, mutation_rate,
                  perturb_weight):
         """
@@ -18,46 +18,15 @@ class PopulationBasedTrainer(Trainer):
         perturb_weight : The range a hyperparameter can move
                          (perturb_weight * abs(hypermeter) 
         """
-        Trainer.__init__(self, trainer.model, trainer.device)
+        ParallelTrainer.__init__(self, trainer, population_size)
 
-        assert population_size > 0
         assert cutoff > 0
         assert population_size >= cutoff * 2
         assert 1 >= mutation_rate > 0
 
-        self.population_size = population_size
-        self.trainer = trainer
         self.cutoff = cutoff
         self.mutation_rate = mutation_rate
         self.perturb_weight = perturb_weight
-
-        self.create_population()
-
-    def _initialize_module(self, module):
-        """
-        Initializes the hyperparameters of a module
-
-        module : The module to initialize the hyperparameters for
-        """
-        classname = module.__class__.__name__
-
-        if classname.find('Hyperparameter') != -1:
-            if(module.search):
-                module.initialize()
-
-    def create_population(self):
-        """
-        Creates a population of trainers
-        """
-        self.trainers = [trainer]
-
-        # Initialize population
-        for i in range(self.population_size - 1):
-            pop_trainer = deepcopy(trainer)
-            pop_trainer.model.apply(self._initialize_module)
-            self.trainers.append(pop_trainer)
-
-        self.trainers = np.array(self.trainers)
 
     def evolve_population(self):
         """
@@ -68,23 +37,25 @@ class PopulationBasedTrainer(Trainer):
         sortid = sortid.numpy()
 
         self.trainers = self.trainers[sortid]
+        self.hyperparams = self.hyperparams[sortid]
         
         # Initialize population
         for i in range(self.cutoff):
-            self.trainers[i].model = \
-                deepcopy(self.trainers[self.population_size - i - 1].model)
-            self.trainers[i].apply(self.mutate_hyperparameters)
+            self.trainers[i] = deepcopy(self.trainers[self.num_trainers - i - 1])
+            self.mutate_weights(self.trainers[i], self.hyperparams[i])
        
-    def mutate_weights(self, module):
+    def mutate_weights(self, trainer, hyperparams):
         """
         Mutates the hyperparameters with the mutation rate and perturb weight
 
-        module : The module to initialize the hyperparameters for
+        trainer : The trainer to mutate the hyperparameters for
+        hyperparams : The hyperparameters to mutate
         """
-        classname = module.__class__.__name__
-
-        if classname.find('Hyperparameter') != -1:
-            if(module.search):
+        # Mutate the hyperparameters the set them again
+        for hyperparam in hyperparams:
+            param = self.hyperparams[hyperparam]
+            if(str(self.param.__class__).find("Hyperparameter") != -1
+                and param.search):
                 perturb = torch.rand(1).item() > self.mutation_rate
 
                 if(perturb):
@@ -92,23 +63,27 @@ class PopulationBasedTrainer(Trainer):
                     perturb_amt = perturb_amt * self.perturb_weight
 
                     # Add a small epsilon as well to get past 0
-                    module.weights.data *= (1 + perturb_amt)
-                    module.weights.data += 1e-8
-                
-                
-    def train_batch(self, *args):
-        """
-        Trains the model for a single batch
-        """
-        procs = []
+                    param.weights.data *= (1 + perturb_amt)
+                    param.weights.data += 1e-8
 
-        for trainer in self.trainers:
-            proc = mp.Process(target = trainer.train_batch, args=args)
-            proc.start()
-            procs.append(proc)
+            # Is an optimizer parameter
+            else:
+                param_group = param["param_group"]
 
-        for proc in procs:
-            proc.join()
+                for optim_param in param_group:
+                    if(str(optim_param.__class__).find("Hyperparameter")
+                        != 1) and optim_param.search):
+                        perturb = torch.rand(1).item() > self.mutation_rate
+
+                        if(perturb):
+                            perturb_amt = torch.rand(1).item() * 2 - 1
+                            perturb_amt = perturb_amt * self.perturb_weight
+
+                            # Add a small epsilon as well to get past 0
+                            optim_param.weights.data *= (1 + perturb_amt)
+                            optim_param.weights.data += 1e-8
+
+        trainer.set_hyperparameters(hyperparams)
 
     def train(self, evolution_interval, epochs, save_path=None, save_interval=1,
               logs_path=None, *args):
@@ -128,42 +103,7 @@ class PopulationBasedTrainer(Trainer):
         generations = epochs // evolution_interval
 
         for generation in range(1, generations + 1):
-            procs = []
-
-            # Train the models
-            for trainer in self.trainers:
-                proc = mp.Process(target = trainer.train,
-                                  args=(evolution_interval, save_path,
-                                        save_interval, *args))
-                proc.start()
-                procs.append(proc)
-
-            for proc in procs:
-                proc.join()
-
-            # Then evaluation for evolution
-            self.eval()
+            ParallelTrainer.train(self, evolution_interval, save_path,
+                                  save_interval, logs_path, *args)
 
             self.evolve_population()
-
-    def eval(self, *args):
-        """
-        Evaluates the model on the data
-        """
-        procs = []
-
-        for trainer in self.trainers:
-                proc = mp.Process(target = trainer.eval, args=args)
-                proc.start()
-                procs.append(proc)
-
-        for proc in procs:
-            proc.join()
-
-        scores = [trainer.score for trainer in self.trainers]
-        best_trainer = np.argmax(scores)
-
-        self._score = scores[best_trainer]
-        self._model = self.trainers[best_trainer].model
-
-        return scores

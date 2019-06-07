@@ -12,9 +12,10 @@ class SLTrainer(Trainer):
         Trainer.__init__(self, model, device)
 
         self.optimizer = optimizer(self.model.parameters(), **optim_args)
+ 
         self.loss_function = loss_function
         self.score_metric = score_metric
-
+    
     def train_batch(self, data, targets):
         """
         Trains the model for a single batch
@@ -26,11 +27,11 @@ class SLTrainer(Trainer):
 
         prediction = self.model(data)
 
-        loss = self.loss_function(data, targets)
+        loss = self.loss_function(prediction, targets)
         loss.backward()
         self.optimizer.step()
 
-        return loss.numpy().item()
+        return loss.cpu().item()
 
     def train(self, epochs, data_loader, test_loader=None, save_path=None,
               save_interval=1, logs_path=None):
@@ -58,6 +59,7 @@ class SLTrainer(Trainer):
             num_batches = 0
 
             for idx, data in data_loader:
+                # Just for now
                 data, targets = [tens.unsqueeze(0) for tens in data]
 
                 loss = self.train_batch(data, targets)
@@ -78,7 +80,9 @@ class SLTrainer(Trainer):
                     avg_score = 0
                     num_tests = 0
 
-                    for data, targets in test_loader:
+                    for idx, data in test_loader:
+                        # Just for now
+                        data, targets = [tens.unsqueeze(0) for tens in data]
                         avg_score += self.eval(data, targets)
                         num_tests += 1
 
@@ -96,6 +100,6 @@ class SLTrainer(Trainer):
         self.model.eval()
 
         prediction = self.model(data)
-        score = self.score_metric(data, targets)
+        score = self.score_metric(prediction, targets)
 
-        return score.numpy().item()
+        return score.cpu().item()

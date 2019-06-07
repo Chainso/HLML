@@ -39,7 +39,7 @@ class Loader():
                                   [1, 1, 1, 0],
                                   [1, 1, 1, 1]]).to(torch.device(device))
 
-        self.targets = torch.LongTensor([[0],
+        self.targets = torch.FloatTensor([[0],
                                     [1],
                                     [1],
                                     [0],
@@ -61,8 +61,12 @@ class Loader():
         return enumerate(zip_data)
 
 if(__name__ == "__main__"):
+    import os 
+
     from HLML.PyTorch.SL.sl_trainer import SLTrainer
     from HLML.PyTorch.utils.classes import Hyperparameter
+
+    dir_path = os.path.dirname(os.path.realpath(__file__))
 
     num_inputs = 4
     num_hidden = 16
@@ -72,14 +76,14 @@ if(__name__ == "__main__"):
     device = "cuda"
 
     optimizer = torch.optim.SGD
-    optim_params = {"lr" : Hyperparameter(1e-2, "lr"),
-                    "momentum" : Hyperparameter(0, "momentum"),
-                    "dampening": Hyperparameter(0, "dampening"),
-                    "weight_decay" : Hyperparameter(0, "weight decay")}
+    optim_params = {"lr" : 1e-2,
+                    "momentum" : 0.9,
+                    "dampening": 0,
+                    "weight_decay" : 0}
 
     loss_function = nn.BCELoss()
     mse_loss = nn.MSELoss()
-    score_metric = lambda x, t: torch.abs(x - t)
+    score_metric = lambda x, t: 1 - torch.abs(x - t)
 
     trainer = SLTrainer(model, device, optimizer, optim_params, loss_function,
                         score_metric)
@@ -87,9 +91,9 @@ if(__name__ == "__main__"):
     epochs = 100
     data_loader = Loader(4, device)
     test_loader = Loader(4, device)
-    save_path = "./models/test.torch"
+    save_path = dir_path + "/models/test.torch"
     save_interval = 10
-    logs_path = "./logs"
+    logs_path = dir_path + "/logs"
 
     trainer.train(epochs, data_loader, test_loader, save_path, save_interval,
                   logs_path)
