@@ -115,7 +115,7 @@ class AMU(nn.Module):
         return output, out_mem
 
     def reset_memory(self):
-        self.memory = torch.zeroes(block_units, num_blocks)
+        self.memory = torch.zeros(self.num_blocks, self.block_units)
 
     def set_memory(self, mem):
         self.memory = mem

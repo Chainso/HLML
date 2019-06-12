@@ -50,7 +50,8 @@ class DQNAgent(Agent):
             rewards = []
             next_states = []
             errors = []
-
+            self.model.online.reset_hidden()
+            self.model.target.reset_hidden()
             while(not done):
                 action, q_value = self.model.step(state)
 
