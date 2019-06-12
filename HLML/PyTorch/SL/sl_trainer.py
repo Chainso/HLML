@@ -15,7 +15,9 @@ class SLTrainer(Trainer):
  
         self.loss_function = loss_function
         self.score_metric = score_metric
-    
+
+        self.find_hyperparams()
+
     def train_batch(self, data, targets):
         """
         Trains the model for a single batch
@@ -58,18 +60,16 @@ class SLTrainer(Trainer):
             avg_loss = 0
             num_batches = 0
 
-            for idx, data in data_loader:
-                # Just for now
-                data, targets = [tens.unsqueeze(0) for tens in data]
-
+            for data, targets in data_loader:
                 loss = self.train_batch(data, targets)
-
+ 
                 avg_loss += loss
                 num_batches += 1
                 total_batches += 1
 
                 if(summary is not None):
                     summary.add_scalar("Loss Per Batch", loss, total_batches)
+
 
             avg_loss /= num_batches
 
@@ -80,9 +80,7 @@ class SLTrainer(Trainer):
                     avg_score = 0
                     num_tests = 0
 
-                    for idx, data in test_loader:
-                        # Just for now
-                        data, targets = [tens.unsqueeze(0) for tens in data]
+                    for data, targets in test_loader:
                         avg_score += self.eval(data, targets)
                         num_tests += 1
 

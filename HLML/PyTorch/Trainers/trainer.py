@@ -34,6 +34,13 @@ class Trainer(ABC):
         """
         return self._score
 
+    @property
+    def hyperparameters(self):
+        """
+        Returns the hyperparameters of the model
+        """
+        return self._hyperparameters
+
     @abstractmethod
     def train_batch(self, *args):
         """
@@ -75,21 +82,21 @@ class Trainer(ABC):
         # Search for hyperparameters as attributes or optimizer params
         # Set them to the regular float value
         for attr in attr_dict:
-            if str(attr_dict[attr].__class__).find("Hyperparameter") != 1:
+            if str(attr_dict[attr].__class__).find("Hyperparameter") != -1:
                 if(attr_dict[attr].search):
                     attr_dict[attr].initialize()
 
                 hyperparam_dict[attr] = attr_dict[attr]
                 setattr(trainer, attr, attr_dict[attr].item())
-            elif str(attr_dict[attr].__class__).find("optim") != 1:
+            elif str(attr_dict[attr].__class__).find("optim") != -1:
                 optim_state_dict = attr_dict[attr].state_dict()
                 hyperparam_dict[attr] = optim_state_dict
-                param_groups = optim_state_dict["param_groups"]
+                param_groups = optim_state_dict["param_groups"][0]
 
                 # Go through the param group and replace all hyperparams
                 for param in param_groups:
                     if(str(param_groups[param].__class__).find("Hyperparameter")
-                       != 1):
+                       != -1):
                        if(param_groups[param].search):   
                            param_groups[param].initialize()
 
@@ -97,7 +104,7 @@ class Trainer(ABC):
 
                 attr_dict[attr].load_state_dict(optim_state_dict)
 
-        return hyperparam_dict
+        self._hyperparameters = hyperparam_dict
 
     def set_hyperparameters(self, hyperparam_dict):
         """
@@ -109,23 +116,27 @@ class Trainer(ABC):
         """
         attr_dict = self.__dict__
 
+        self._hyperparameters = {}
+
         for attr in hyperparam_dict:
             if attr in attr_dict:
                 if(str(hyperparam_dict[attr].__class__).find("Hyperparameter")
-                   != -1):
-                   setattr(self, attr, hyperparam_dict[attr].item())
+                   != -1 and hyperparam_dict[attr].search):
+                    setattr(self, attr, hyperparam_dict[attr].item())
+                    self._hyperparameters[attr] = hyperparam_dict[attr]
 
                 # Otherwise create the state dict for the optimizer
                 else:
                     optim_params = hyperparam_dict[attr]
-                    param_group = optim_params["param_group"]
+                    param_groups = optim_params["param_group"][0]
 
-                    for param in param_group:
-                        if(str(param_group[param].__class__).find("Hyperparameter")
-                           != -1):
-                            param_group[param] = param_group[param].item()
+                    for param in param_groups:
+                        if(str(param_groups[param].__class__).find("Hyperparameter")
+                           != -1 and param_groups[param].search):
+                            param_groups[param] = param_groups[param].item()
 
                     attr_dict[attr].load_state_dict(optim_params)
+                    self._hyperparameters[attr] = optim_params
 
     def save(self, save_path):
         """

@@ -28,8 +28,8 @@ if(__name__ == "__main__"):
     from torch.optim import Adam
 
     from HLML.PyTorch.RL.algos.dqn import DQN
-    from envs.Gym import GymEnv
-    from utils.replay_memory import PERMemory
+    from HLML.envs.Gym import GymEnv
+    from HLML.utils.replay_memory import PERMemory
     from HLML.PyTorch.RL.agents.q_agent import DQNAgent
 
     # DQN Parameters

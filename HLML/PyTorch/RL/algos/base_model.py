@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 from abc import abstractmethod
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 from torch.distributions import Categorical
 
 from HLML.PyTorch.base_model import Model

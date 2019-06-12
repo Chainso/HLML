@@ -1,7 +1,7 @@
 import torch
 
 from abc import ABC, abstractmethod
-from tensorboardX import SummaryWriter
+from torch.utils.tensorboard import SummaryWriter
 
 class Agent(ABC):
     """

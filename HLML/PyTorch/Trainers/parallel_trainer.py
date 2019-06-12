@@ -14,11 +14,25 @@ class ParallelTrainer(Trainer):
         trainer : Either a single trainer to make copies of, of a list of
                   trainers
         """
-        Trainer.__init__(self, trainer.model, trainer.device)
+        if(type(trainer) == list):
+            device = trainer[0].device
+            model = trainer[0].model
+        elif(issubclass(trainer.__class__, Trainer)):
+            device = trainer.device
+            model = trainer.model
+        else:
+            raise Exception("Invalid trainer for parallel train")
+
+        Trainer.__init__(self, model, device)
+
+        # Need to use spawn over fork
+        mp.set_start_method("spawn")
+
+        self.num_trainers = num_trainers
 
         if(type(trainer) == list):
             self.trainers = trainer
-        elif(issubclass(trainer, Trainer)):
+        else:
             self.trainers = [trainer]
 
             for i in range(self.num_trainers - 1):
@@ -28,7 +42,8 @@ class ParallelTrainer(Trainer):
         self.hyperparams = []
 
         for trainer in self.trainers:
-            self.hyperparams.append(trainer._find_hyperparams())
+            # Doesn't include model hyperparameters
+            self.hyperparams.append(trainer.hyperparameters)
 
         self.trainers = np.array(self.trainers)
         self.hyperparams = np.array(self.hyperparams)
@@ -75,17 +90,18 @@ class ParallelTrainer(Trainer):
         procs = []
 
         # Train the models
-        for trainer in self.trainers:
-            proc = mp.Process(target = trainer.train,
-                                args=(epochs, save_path, save_interval, *args))
+        for i in range(len(self.trainers)):
+            s_path = save_path + "-" + str(i + 1)
+            l_path = logs_path + "/logs-" + str(i + 1)
+
+            proc = mp.Process(target = self.trainers[i].train,
+                              args=(epochs, *args, s_path, save_interval,
+                                    l_path))
             proc.start()
             procs.append(proc)
 
         for proc in procs:
             proc.join()
-
-        # Then evaluation for evolution
-        self.eval()
 
     def eval(self, *args):
         """

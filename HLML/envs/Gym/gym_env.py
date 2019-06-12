@@ -1,6 +1,6 @@
 import gym
 
-from envs import Env
+from HLML.envs import Env
 
 class GymEnv(Env):
     def __init__(self, max_steps, name, render):

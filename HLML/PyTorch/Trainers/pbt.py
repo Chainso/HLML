@@ -86,7 +86,7 @@ class PopulationBasedTrainer(ParallelTrainer):
         trainer.set_hyperparameters(hyperparams)
 
     def train(self, evolution_interval, epochs, save_path=None, save_interval=1,
-              logs_path=None, *args):
+              logs_path=None, *args, **eval_args):
         """
         Trains the model using the given trainer and population based training
 
@@ -99,6 +99,7 @@ class PopulationBasedTrainer(ParallelTrainer):
                         each save
         logs_path : The path to save logs to
         args : Any additional arguments of the trainer that was wrapped
+        eval_args : The arguments for evaluation to be used for truncation
         """
         generations = epochs // evolution_interval
 
@@ -106,4 +107,5 @@ class PopulationBasedTrainer(ParallelTrainer):
             ParallelTrainer.train(self, evolution_interval, save_path,
                                   save_interval, logs_path, *args)
 
+            self.eval(**eval_args)
             self.evolve_population()
